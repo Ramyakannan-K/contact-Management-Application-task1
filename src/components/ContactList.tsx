@@ -16,7 +16,8 @@ import {
   MapPin, 
   User,
   Calendar,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -34,9 +35,10 @@ interface ContactListProps {
   contacts: Contact[];
   onEdit: (contact: Contact) => void;
   onContactsChange: () => void;
+  loading?: boolean;
 }
 
-const ContactList: React.FC<ContactListProps> = ({ contacts, onEdit, onContactsChange }) => {
+const ContactList: React.FC<ContactListProps> = ({ contacts, onEdit, onContactsChange, loading = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -50,7 +52,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, onEdit, onContactsC
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      ContactService.deleteContact(id);
+      await ContactService.deleteContact(id);
       toast.success('Contact deleted successfully!');
       onContactsChange();
     } catch (error) {
@@ -67,6 +69,18 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, onEdit, onContactsC
       day: 'numeric',
     }).format(date);
   };
+
+  if (loading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto shadow-lg">
+        <CardContent className="p-12 text-center">
+          <Loader2 className="h-16 w-16 mx-auto text-blue-600 animate-spin mb-4" />
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">Loading Contacts</h3>
+          <p className="text-gray-500">Please wait while we fetch your contacts...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (contacts.length === 0) {
     return (
@@ -169,7 +183,11 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, onEdit, onContactsC
                             className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-all duration-200"
                             disabled={deletingId === contact.id}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
+                            {deletingId === contact.id ? (
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-1" />
+                            )}
                             {deletingId === contact.id ? 'Deleting...' : 'Delete'}
                           </Button>
                         </AlertDialogTrigger>

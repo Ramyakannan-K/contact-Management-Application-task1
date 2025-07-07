@@ -60,10 +60,10 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
 
     try {
       if (contact) {
-        ContactService.updateContact(contact.id, formData);
+        await ContactService.updateContact(contact.id, formData);
         toast.success('Contact updated successfully!');
       } else {
-        ContactService.createContact(formData);
+        await ContactService.createContact(formData);
         toast.success('Contact created successfully!');
       }
       onSave();
@@ -109,6 +109,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 className="transition-all duration-200 hover:border-blue-400 focus:border-blue-500"
                 placeholder="Enter first name"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -123,6 +124,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 className="transition-all duration-200 hover:border-blue-400 focus:border-blue-500"
                 placeholder="Enter last name"
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -138,6 +140,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
               onChange={(e) => handleInputChange('email', e.target.value)}
               className="transition-all duration-200 hover:border-blue-400 focus:border-blue-500"
               placeholder="Enter email address"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -152,6 +155,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
               className="transition-all duration-200 hover:border-blue-400 focus:border-blue-500"
               placeholder="Enter phone number"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -165,6 +169,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
               onChange={(e) => handleInputChange('address', e.target.value)}
               className="transition-all duration-200 hover:border-blue-400 focus:border-blue-500 min-h-[100px]"
               placeholder="Enter full address"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -182,6 +187,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ contact, onSave, onCancel }) 
               variant="outline"
               onClick={onCancel}
               className="flex-1 hover:bg-gray-50 transition-all duration-200"
+              disabled={isSubmitting}
             >
               <X className="h-4 w-4 mr-2" />
               Cancel

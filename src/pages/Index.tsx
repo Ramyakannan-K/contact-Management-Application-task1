@@ -6,6 +6,7 @@ import ContactList from '../components/ContactList';
 import { Contact } from '../types/contact';
 import { ContactService } from '../services/contactService';
 import { UserPlus, ArrowLeft, BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
 
 type ViewMode = 'list' | 'form';
 
@@ -13,14 +14,23 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadContacts();
   }, []);
 
-  const loadContacts = () => {
-    const loadedContacts = ContactService.getAllContacts();
-    setContacts(loadedContacts);
+  const loadContacts = async () => {
+    try {
+      setLoading(true);
+      const loadedContacts = await ContactService.getAllContacts();
+      setContacts(loadedContacts);
+    } catch (error) {
+      toast.error('Failed to load contacts. Make sure the Flask backend is running.');
+      console.error('Error loading contacts:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddNew = () => {
@@ -93,6 +103,7 @@ const Index = () => {
             contacts={contacts}
             onEdit={handleEdit}
             onContactsChange={loadContacts}
+            loading={loading}
           />
         ) : (
           <ContactForm
@@ -106,7 +117,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
         <div className="container mx-auto px-4 py-6 text-center text-gray-600">
-          <p>Contact Management Application - Built with React, TypeScript & Tailwind CSS</p>
+          <p>Contact Management Application - Built with React, TypeScript, Python Flask & SQLite</p>
         </div>
       </footer>
     </div>

@@ -1,14 +1,16 @@
 
 import { Contact, ContactFormData } from '../types/contact';
 
-const STORAGE_KEY = 'contacts';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export class ContactService {
-  static getAllContacts(): Contact[] {
+  static async getAllContacts(): Promise<Contact[]> {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (!data) return [];
-      const contacts = JSON.parse(data);
+      const response = await fetch(`${API_BASE_URL}/contacts`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts');
+      }
+      const contacts = await response.json();
       return contacts.map((contact: any) => ({
         ...contact,
         createdAt: new Date(contact.createdAt),
@@ -16,78 +18,101 @@ export class ContactService {
       }));
     } catch (error) {
       console.error('Error loading contacts:', error);
-      return [];
+      throw new Error('Failed to load contacts');
     }
   }
 
-  static saveContacts(contacts: Contact[]): void {
+  static async createContact(formData: ContactFormData): Promise<Contact> {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+      const response = await fetch(`${API_BASE_URL}/contacts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create contact');
+      }
+
+      const contact = await response.json();
+      return {
+        ...contact,
+        createdAt: new Date(contact.createdAt),
+        updatedAt: new Date(contact.updatedAt),
+      };
     } catch (error) {
-      console.error('Error saving contacts:', error);
+      console.error('Error creating contact:', error);
+      throw error;
     }
   }
 
-  static createContact(formData: ContactFormData): Contact {
-    const contacts = this.getAllContacts();
-    
-    // Check for duplicate email
-    const existingContact = contacts.find(
-      contact => contact.email.toLowerCase() === formData.email.toLowerCase()
-    );
-    
-    if (existingContact) {
-      throw new Error('A contact with this email already exists');
+  static async updateContact(id: string, formData: ContactFormData): Promise<Contact> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contacts/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update contact');
+      }
+
+      const contact = await response.json();
+      return {
+        ...contact,
+        createdAt: new Date(contact.createdAt),
+        updatedAt: new Date(contact.updatedAt),
+      };
+    } catch (error) {
+      console.error('Error updating contact:', error);
+      throw error;
     }
-
-    const newContact: Contact = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    contacts.push(newContact);
-    this.saveContacts(contacts);
-    return newContact;
   }
 
-  static updateContact(id: string, formData: ContactFormData): Contact {
-    const contacts = this.getAllContacts();
-    const contactIndex = contacts.findIndex(contact => contact.id === id);
-    
-    if (contactIndex === -1) {
-      throw new Error('Contact not found');
+  static async deleteContact(id: string): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contacts/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete contact');
+      }
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      throw error;
     }
-
-    // Check for duplicate email (excluding current contact)
-    const existingContact = contacts.find(
-      contact => contact.email.toLowerCase() === formData.email.toLowerCase() && contact.id !== id
-    );
-    
-    if (existingContact) {
-      throw new Error('A contact with this email already exists');
-    }
-
-    const updatedContact: Contact = {
-      ...contacts[contactIndex],
-      ...formData,
-      updatedAt: new Date(),
-    };
-
-    contacts[contactIndex] = updatedContact;
-    this.saveContacts(contacts);
-    return updatedContact;
   }
 
-  static deleteContact(id: string): void {
-    const contacts = this.getAllContacts();
-    const filteredContacts = contacts.filter(contact => contact.id !== id);
-    this.saveContacts(filteredContacts);
-  }
+  static async getContactById(id: string): Promise<Contact | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contacts/${id}`);
+      
+      if (response.status === 404) {
+        return null;
+      }
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch contact');
+      }
 
-  static getContactById(id: string): Contact | null {
-    const contacts = this.getAllContacts();
-    return contacts.find(contact => contact.id === id) || null;
+      const contact = await response.json();
+      return {
+        ...contact,
+        createdAt: new Date(contact.createdAt),
+        updatedAt: new Date(contact.updatedAt),
+      };
+    } catch (error) {
+      console.error('Error loading contact:', error);
+      return null;
+    }
   }
 }
